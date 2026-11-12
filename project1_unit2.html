@@ -1,0 +1,775 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project 1 - Unit 2 Grammar Challenge</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;padding:18px;
+ font-family:Arial,sans-serif;
+ background:linear-gradient(135deg,#38bdf8,#8b5cf6,#f472b6,#fbbf24);
+ display:flex;align-items:center;justify-content:center;
+}
+.game{
+ background:white;width:100%;max-width:760px;
+ border-radius:25px;padding:28px;text-align:center;
+ box-shadow:0 15px 45px #0003;
+}
+h1{color:#6236c5;margin:5px 0}
+.subtitle{color:#666}
+.progress{
+ height:14px;background:#e9e3fa;
+ border-radius:20px;overflow:hidden;margin:22px 0;
+}
+.bar{
+ height:100%;width:0;
+ background:linear-gradient(90deg,#06b6d4,#8b5cf6);
+ transition:.3s;
+}
+.tag{
+ display:inline-block;background:#eee5ff;
+ color:#6236c5;padding:9px 17px;
+ border-radius:25px;font-weight:bold;
+}
+.question{
+ font-size:23px;font-weight:bold;
+ line-height:1.5;margin:24px 0;
+}
+.instruction{color:#666;font-size:15px}
+.options{
+ display:grid;grid-template-columns:1fr 1fr;
+ gap:12px;
+}
+button{
+ cursor:pointer;border:none;border-radius:13px;
+ padding:14px;font-size:16px;font-weight:bold;
+}
+.option{
+ background:#f0ecff;color:#44278b;
+ border:2px solid transparent;
+}
+.option:hover:not(:disabled){background:#ded3ff}
+.option:disabled{cursor:default}
+.correct{
+ background:#d1fae5!important;
+ color:#166534!important;
+ border-color:#16a34a!important;
+}
+.wrong{
+ background:#fee2e2!important;
+ color:#991b1b!important;
+ border-color:#dc2626!important;
+}
+.answer-input{
+ width:100%;max-width:430px;padding:15px;
+ font-size:19px;border:2px solid #c4b5fd;
+ border-radius:12px;text-align:center;
+}
+.word-bank{
+ display:flex;flex-wrap:wrap;
+ justify-content:center;gap:9px;
+}
+.word{
+ background:#e9ddff;color:#432181;
+ border:2px solid #c4b5fd;
+}
+.word:disabled{opacity:.4}
+.built{
+ min-height:65px;border:2px dashed #a78bfa;
+ background:#faf7ff;border-radius:13px;
+ padding:12px;margin:15px 0;font-size:19px;
+}
+.feedback{
+ min-height:75px;margin:18px 0;
+ font-size:19px;font-weight:bold;
+}
+.good{color:#16a34a}
+.bad{color:#dc2626}
+.small{font-size:15px;color:#666;margin-top:8px}
+.action{background:#6335c7;color:white;margin:5px}
+.action:disabled{opacity:.45;cursor:default}
+.score{
+ font-size:65px;color:#6335c7;
+ font-weight:bold;
+}
+.hidden{display:none}
+.review{text-align:left;margin-top:20px}
+.review-item{
+ padding:12px;background:#fff0f0;
+ border-radius:10px;margin:9px 0;
+ font-size:15px;
+}
+@media(max-width:520px){
+ .game{padding:19px}
+ .options{grid-template-columns:1fr}
+ .question{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="game">
+<h1>🌟 Project 1 Grammar Challenge</h1>
+<p class="subtitle">Unit 2 • Friends and Family</p>
+
+<div id="quiz">
+<p id="counter"></p>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<span class="tag" id="category"></span>
+<p class="instruction" id="instruction"></p>
+<div class="question" id="question"></div>
+<div id="answerArea"></div>
+<div class="feedback" id="feedback" aria-live="polite"></div>
+<button class="action" id="check" onclick="checkAnswer()">
+ Check Answer ✔
+</button>
+<button class="action" id="next" onclick="nextQuestion()" disabled>
+ Next Question ➜
+</button>
+</div>
+
+<div id="result" class="hidden">
+<h2>🏆 Mission Complete!</h2>
+<div class="score" id="score"></div>
+<h2 id="message"></h2>
+<div class="review" id="review"></div>
+<button class="action" onclick="startGame()">
+ 🔄 Play Again
+</button>
+</div>
+</div>
+
+<script>
+/*
+Question format:
+[type, category, question, correct answer, options]
+
+choice: multiple choice
+gap: choose the missing word
+write: type the answer
+order: build the sentence
+*/
+
+const bank = [
+
+// PERSONAL PRONOUNS - 12 QUESTIONS
+
+["choice","Personal Pronouns",
+"Emma is my sister. ___ is eleven.",
+"She",["He","She","It","They"]],
+
+["gap","Personal Pronouns",
+"Tom is my brother. ___ is twelve.",
+"He",["She","It","He","We"]],
+
+["choice","Personal Pronouns",
+"My parents are teachers. ___ are very nice.",
+"They",["We","He","They","She"]],
+
+["gap","Personal Pronouns",
+"My name is Lucy. ___ am from England.",
+"I",["You","I","She","We"]],
+
+["choice","Personal Pronouns",
+"Jack and I are friends. ___ are classmates.",
+"We",["They","We","He","You"]],
+
+["gap","Personal Pronouns",
+"This is my dog. ___ is very small.",
+"It",["He","She","They","It"]],
+
+["choice","Personal Pronouns",
+"Anna and Ben are from London. ___ are English.",
+"They",["They","We","She","It"]],
+
+["write","Personal Pronouns",
+"Replace 'my mother' with a pronoun: ___ is a doctor.",
+"She",[]],
+
+["write","Personal Pronouns",
+"Replace 'my father' with a pronoun: ___ is tall.",
+"He",[]],
+
+["order","Personal Pronouns",
+"Make a correct sentence.",
+"We are good friends.",
+["We","are","good","friends."]],
+
+["choice","Personal Pronouns",
+"Choose the correct sentence.",
+"They are my cousins.",
+["Them are my cousins.","They are my cousins.",
+"Their are my cousins.","They is my cousins."]],
+
+["gap","Personal Pronouns",
+"Hello, Kate! ___ are my best friend.",
+"You",["I","He","You","She"]],
+
+// POSSESSIVE ADJECTIVES - 12 QUESTIONS
+
+["choice","Possessive Adjectives",
+"I am Peter. This is ___ brother.",
+"my",["your","my","his","her"]],
+
+["gap","Possessive Adjectives",
+"She is Anna. ___ mother is a teacher.",
+"Her",["His","Their","Her","Our"]],
+
+["choice","Possessive Adjectives",
+"He is Tom. ___ sister is nine.",
+"His",["Her","My","His","Its"]],
+
+["gap","Possessive Adjectives",
+"We are twins. ___ birthday is in May.",
+"Our",["Their","Our","Your","My"]],
+
+["choice","Possessive Adjectives",
+"They are my friends. ___ house is big.",
+"Their",["Our","His","Their","Her"]],
+
+["gap","Possessive Adjectives",
+"You are my friend. Is this ___ bag?",
+"your",["my","his","your","our"]],
+
+["choice","Possessive Adjectives",
+"The dog is brown. ___ name is Max.",
+"Its",["It's","Its","Their","Our"]],
+
+["write","Possessive Adjectives",
+"Complete: I am Lucy. ___ family is big.",
+"My",[]],
+
+["write","Possessive Adjectives",
+"Complete: Ben is English. ___ dad is English too.",
+"His",[]],
+
+["order","Possessive Adjectives",
+"Make a correct sentence.",
+"Her brother is thirteen.",
+["Her","brother","is","thirteen."]],
+
+["choice","Possessive Adjectives",
+"Choose the correct sentence.",
+"Our parents are from Hungary.",
+["Us parents are from Hungary.",
+"Our parents are from Hungary.",
+"We parents are from Hungary.",
+"Ours parents are from Hungary."]],
+
+["gap","Possessive Adjectives",
+"Emma and Lucy are sisters. ___ parents are teachers.",
+"Their",["Her","Our","Their","His"]],
+
+// TO BE AFFIRMATIVE - 12 QUESTIONS
+
+["choice","To Be: Affirmative",
+"I ___ eleven years old.",
+"am",["is","are","am","be"]],
+
+["gap","To Be: Affirmative",
+"My brother ___ ten.",
+"is",["am","are","is","be"]],
+
+["choice","To Be: Affirmative",
+"We ___ from Hungary.",
+"are",["am","is","are","be"]],
+
+["gap","To Be: Affirmative",
+"She ___ my best friend.",
+"is",["are","am","is","be"]],
+
+["choice","To Be: Affirmative",
+"They ___ in the classroom.",
+"are",["is","am","are","be"]],
+
+["gap","To Be: Affirmative",
+"My parents ___ at home.",
+"are",["is","are","am","be"]],
+
+["choice","To Be: Affirmative",
+"It ___ Monday today.",
+"is",["am","are","is","be"]],
+
+["write","To Be: Affirmative",
+"Complete: My name ___ Jack.",
+"is",[]],
+
+["write","To Be: Affirmative",
+"Complete: You ___ my friend.",
+"are",[]],
+
+["order","To Be: Affirmative",
+"Make a correct sentence.",
+"She is from England.",
+["She","is","from","England."]],
+
+["choice","To Be: Affirmative",
+"Choose the correct sentence.",
+"My cousins are twelve.",
+["My cousins is twelve.",
+"My cousins are twelve.",
+"My cousins am twelve.",
+"My cousins be twelve."]],
+
+["gap","To Be: Affirmative",
+"Tom and I ___ classmates.",
+"are",["is","are","am","be"]],
+
+// TO BE NEGATIVE - 12 QUESTIONS
+
+["choice","To Be: Negative",
+"I ___ from Australia. I'm from Hungary.",
+"am not",["isn't","aren't","am not","not am"]],
+
+["gap","To Be: Negative",
+"She ___ twelve. She's eleven.",
+"isn't",["aren't","isn't","am not","not is"]],
+
+["choice","To Be: Negative",
+"They ___ brothers. They're friends.",
+"aren't",["isn't","aren't","am not","not are"]],
+
+["gap","To Be: Negative",
+"He ___ English. He's Hungarian.",
+"isn't",["aren't","isn't","am not","don't"]],
+
+["choice","To Be: Negative",
+"We ___ at school today.",
+"aren't",["isn't","aren't","am not","doesn't"]],
+
+["gap","To Be: Negative",
+"My sister ___ a teacher.",
+"isn't",["aren't","isn't","am not","don't"]],
+
+["choice","To Be: Negative",
+"You ___ late. You're early.",
+"aren't",["isn't","aren't","am not","doesn't"]],
+
+["write","To Be: Negative",
+"Complete: It ___ (is not) Friday today.",
+"isn't",[]],
+
+["write","To Be: Negative",
+"Complete: They ___ (are not) from Spain.",
+"aren't",[]],
+
+["order","To Be: Negative",
+"Make a correct sentence.",
+"He isn't my cousin.",
+["He","isn't","my","cousin."]],
+
+["choice","To Be: Negative",
+"Choose the correct sentence.",
+"We aren't from France.",
+["We isn't from France.",
+"We aren't from France.",
+"We am not from France.",
+"We not are from France."]],
+
+["gap","To Be: Negative",
+"My grandparents ___ young.",
+"aren't",["isn't","aren't","am not","doesn't"]],
+
+// TO BE QUESTIONS - 12 QUESTIONS
+
+["choice","To Be: Questions",
+"___ you from Hungary?",
+"Are",["Is","Am","Are","Be"]],
+
+["gap","To Be: Questions",
+"___ she your sister?",
+"Is",["Are","Is","Am","Be"]],
+
+["choice","To Be: Questions",
+"___ they your friends?",
+"Are",["Am","Is","Are","Be"]],
+
+["gap","To Be: Questions",
+"___ he eleven years old?",
+"Is",["Are","Am","Is","Be"]],
+
+["choice","To Be: Questions",
+"___ I in the right classroom?",
+"Am",["Is","Are","Am","Be"]],
+
+["gap","To Be: Questions",
+"___ your parents at home?",
+"Are",["Is","Are","Am","Be"]],
+
+["choice","To Be: Questions",
+"Is Emma your cousin? Yes, she ___.",
+"is",["are","am","is","isn't"]],
+
+["write","To Be: Questions",
+"Complete: ___ your brother from England?",
+"Is",[]],
+
+["write","To Be: Questions",
+"Complete: Are they classmates? Yes, they ___.",
+"are",[]],
+
+["order","To Be: Questions",
+"Make a correct question.",
+"Are you from London?",
+["Are","you","from","London?"]],
+
+["choice","To Be: Questions",
+"Choose the correct question.",
+"Is your mum a teacher?",
+["Are your mum a teacher?",
+"Is your mum a teacher?",
+"Am your mum a teacher?",
+"Your mum is a teacher?"]],
+
+["gap","To Be: Questions",
+"___ we in the same class?",
+"Are",["Am","Is","Are","Be"]]
+
+];
+
+// GAME VARIABLES
+
+const QUESTIONS_PER_ROUND = 10;
+
+let round=[];
+let index=0;
+let points=0;
+let answered=false;
+let selectedAnswer="";
+let chosenWords=[];
+let previousIds=new Set();
+let mistakes=[];
+
+// SHUFFLE
+
+function shuffle(array){
+ const result=[...array];
+ for(let i=result.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [result[i],result[j]]=[result[j],result[i]];
+ }
+ return result;
+}
+
+// NORMALIZE ANSWERS
+
+function normalize(text){
+ return String(text)
+ .trim()
+ .toLowerCase()
+ .replace(/[’‘]/g,"'")
+ .replace(/[.!?]+$/g,"")
+ .replace(/\s+/g," ");
+}
+
+// CREATE ROUND
+
+function makeRound(){
+ const categories=[...new Set(bank.map(q=>q[1]))];
+ let selected=[];
+
+ categories.forEach(category=>{
+  let available=bank.map((q,i)=>({q,i}))
+   .filter(x=>x.q[1]===category&&!previousIds.has(x.i));
+
+  if(available.length<2){
+   available=bank.map((q,i)=>({q,i}))
+    .filter(x=>x.q[1]===category);
+  }
+
+  selected.push(...shuffle(available).slice(0,2));
+ });
+
+ previousIds=new Set(selected.map(x=>x.i));
+
+ return shuffle(selected.map(x=>x.q));
+}
+
+// START GAME
+
+function startGame(){
+ round=makeRound();
+ index=0;
+ points=0;
+ mistakes=[];
+ answered=false;
+
+ document.getElementById("quiz").classList.remove("hidden");
+ document.getElementById("result").classList.add("hidden");
+
+ showQuestion();
+}
+
+// SHOW QUESTION
+
+function showQuestion(){
+ answered=false;
+ selectedAnswer="";
+ chosenWords=[];
+
+ const q=round[index];
+ const type=q[0];
+
+ document.getElementById("counter").textContent=
+  "Question "+(index+1)+" of "+QUESTIONS_PER_ROUND;
+
+ document.getElementById("bar").style.width=
+  (index/QUESTIONS_PER_ROUND*100)+"%";
+
+ document.getElementById("category").textContent=q[1];
+ document.getElementById("question").textContent=q[2];
+ document.getElementById("feedback").innerHTML="";
+
+ document.getElementById("check").disabled=false;
+ document.getElementById("next").disabled=true;
+
+ document.getElementById("next").textContent=
+  index===9?"See My Results ➜":"Next Question ➜";
+
+ const area=document.getElementById("answerArea");
+ area.innerHTML="";
+
+ const instruction=document.getElementById("instruction");
+
+ if(type==="choice"||type==="gap"){
+  instruction.textContent="Choose the correct answer.";
+
+  const container=document.createElement("div");
+  container.className="options";
+
+  shuffle(q[4]).forEach(option=>{
+   const btn=document.createElement("button");
+   btn.className="option";
+   btn.textContent=option;
+
+   btn.onclick=()=>{
+    if(answered)return;
+    selectedAnswer=option;
+
+    container.querySelectorAll("button").forEach(b=>{
+     b.style.outline="";
+    });
+
+    btn.style.outline="3px solid #7c3aed";
+   };
+
+   container.appendChild(btn);
+  });
+
+  area.appendChild(container);
+ }
+
+ if(type==="write"){
+  instruction.textContent="Type the missing word or words.";
+
+  const input=document.createElement("input");
+  input.className="answer-input";
+  input.id="typed";
+  input.placeholder="Write your answer...";
+  input.autocomplete="off";
+
+  input.onkeydown=e=>{
+   if(e.key==="Enter"&&!answered)checkAnswer();
+  };
+
+  area.appendChild(input);
+ }
+
+ if(type==="order"){
+  instruction.textContent="Click the words in the correct order.";
+
+  const built=document.createElement("div");
+  built.className="built";
+  built.id="built";
+  built.textContent="Your sentence will appear here.";
+  area.appendChild(built);
+
+  const container=document.createElement("div");
+  container.className="word-bank";
+
+  shuffle(q[4]).forEach(word=>{
+   const btn=document.createElement("button");
+   btn.className="word";
+   btn.textContent=word;
+
+   btn.onclick=()=>{
+    if(answered)return;
+    chosenWords.push(word);
+    btn.disabled=true;
+    built.textContent=chosenWords.join(" ");
+   };
+
+   container.appendChild(btn);
+  });
+
+  area.appendChild(container);
+
+  const reset=document.createElement("button");
+  reset.className="action";
+  reset.textContent="Clear Sentence";
+
+  reset.onclick=()=>{
+   if(answered)return;
+   chosenWords=[];
+   built.textContent="Your sentence will appear here.";
+   container.querySelectorAll("button").forEach(b=>b.disabled=false);
+  };
+
+  area.appendChild(document.createElement("br"));
+  area.appendChild(reset);
+ }
+}
+
+// CHECK ANSWER
+
+function checkAnswer(){
+ if(answered)return;
+
+ const q=round[index];
+ const type=q[0];
+ const correct=q[3];
+
+ let answer="";
+
+ if(type==="choice"||type==="gap"){
+  answer=selectedAnswer;
+ }
+
+ if(type==="write"){
+  answer=document.getElementById("typed").value;
+ }
+
+ if(type==="order"){
+  answer=chosenWords.join(" ");
+ }
+
+ if(!answer.trim()){
+  document.getElementById("feedback").textContent=
+   "Please answer the question first.";
+  return;
+ }
+
+ answered=true;
+
+ const isCorrect=normalize(answer)===normalize(correct);
+ const feedback=document.getElementById("feedback");
+
+ if(isCorrect){
+  points++;
+  feedback.innerHTML=
+   '<span class="good">✔ Excellent! Correct answer!</span>';
+ }else{
+  feedback.innerHTML=
+   '<span class="bad">✘ Not quite!</span>';
+
+  const explanation=document.createElement("div");
+  explanation.className="small";
+  explanation.textContent="Correct answer: "+correct;
+  feedback.appendChild(explanation);
+
+  mistakes.push({question:q[2],answer:correct});
+ }
+
+ if(type==="choice"||type==="gap"){
+  document.querySelectorAll(".option").forEach(btn=>{
+   btn.disabled=true;
+
+   if(normalize(btn.textContent)===normalize(correct)){
+    btn.classList.add("correct");
+   }else if(normalize(btn.textContent)===normalize(answer)){
+    btn.classList.add("wrong");
+   }
+  });
+ }
+
+ if(type==="write"){
+  document.getElementById("typed").disabled=true;
+ }
+
+ if(type==="order"){
+  document.querySelectorAll(".word").forEach(btn=>{
+   btn.disabled=true;
+  });
+ }
+
+ document.getElementById("check").disabled=true;
+ document.getElementById("next").disabled=false;
+
+ document.getElementById("bar").style.width=
+  ((index+1)/QUESTIONS_PER_ROUND*100)+"%";
+}
+
+// NEXT QUESTION
+
+function nextQuestion(){
+ if(!answered)return;
+
+ index++;
+
+ if(index>=QUESTIONS_PER_ROUND){
+  showResults();
+ }else{
+  showQuestion();
+ }
+}
+
+// RESULTS
+
+function showResults(){
+ document.getElementById("quiz").classList.add("hidden");
+ document.getElementById("result").classList.remove("hidden");
+
+ document.getElementById("score").textContent=
+  points+" / "+QUESTIONS_PER_ROUND;
+
+ let message="";
+
+ if(points===10){
+  message="🌟 Perfect! You're a grammar superstar!";
+ }else if(points>=8){
+  message="🎉 Great job! Keep it up!";
+ }else if(points>=6){
+  message="👍 Good work! Keep practising!";
+ }else{
+  message="💪 Don't give up! Try again!";
+ }
+
+ document.getElementById("message").textContent=message;
+
+ const review=document.getElementById("review");
+ review.innerHTML="";
+
+ if(mistakes.length){
+  const title=document.createElement("h3");
+  title.textContent="Let's review your mistakes:";
+  review.appendChild(title);
+
+  mistakes.forEach(m=>{
+   const item=document.createElement("div");
+   item.className="review-item";
+
+   const q=document.createElement("div");
+   q.textContent=m.question;
+
+   const a=document.createElement("strong");
+   a.textContent="Correct answer: "+m.answer;
+
+   item.appendChild(q);
+   item.appendChild(a);
+   review.appendChild(item);
+  });
+ }else{
+  const p=document.createElement("p");
+  p.className="good";
+  p.textContent="✔ No mistakes! Fantastic!";
+  review.appendChild(p);
+ }
+}
+
+startGame();
+</script>
+</body>
+</html>
